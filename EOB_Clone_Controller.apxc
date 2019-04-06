@@ -1,0 +1,105 @@
+public class EOB_Clone_Controller {
+    
+   // public boolean selected{get;set;}
+    public List<ServiceWrapper> serviceWrapperList {get; set;}
+    public List<Service__c> selectedServices{get;set;}
+    public EOB__c eobRec{get;set;}
+    //public String name{get;set;}
+    public String selectedPrimaryPayer{get;set;}
+    //public String providerName{get;set;}
+    
+    public List<SelectOption> regions
+{
+    get
+    {
+        List<SelectOption> options = new List<SelectOption>();
+        Schema.DescribeFieldResult fieldResult = EOB__c.Primary_Payer_Type__c.getDescribe();
+        List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+
+        for( Schema.PicklistEntry f : ple)
+            options.add(new SelectOption(f.getLabel(), f.getValue()));
+        return options;
+    }
+}
+    
+        public EOB_Clone_Controller(ApexPages.StandardController stdController) {
+            eobRec =(EOB__c)stdController.getRecord();
+       Id id = ApexPages.currentPage().getParameters().get('id');
+       system.debug('id '+id);
+       /*for (EOB__c eob:[select name,Primary_Payer_Type__c,Provider_Name__c from EOB__c where id = :id])
+       {
+          name=eob.name; 
+          selectedPrimaryPayer=eob.Primary_Payer_Type__c;
+          providerName=eob.Provider_Name__c;
+       }*/
+       
+       serviceWrapperList=new List<ServiceWrapper>();
+       for(Service__c service:[select id,name,EOB__c,No_of_Units__c from Service__c where eob__c = :id])
+       {
+           serviceWrapperList.add(new ServiceWrapper(service));
+       }
+
+       system.debug('serviceWrapperList '+serviceWrapperList);
+    }
+
+        public PageReference save() {
+            
+            system.debug('inside save');
+            List<Service__c> insertServices=new List<Service__c>();
+            //EOB__c eob=new EOB__c(name=name,Primary_Payer_Type__c=selectedPrimaryPayer,Provider_Name__c=providerName);
+            EOB__c eob=new EOB__c();
+            eob=eobRec.clone();
+            system.debug(eob);
+            insert eob;
+            insertServices=processSelected(eob);
+            //List<Service__c> insertServices=new List<Service__c>();
+            system.debug('selectedServices '+selectedServices);
+            /*for(Service__c serv:selectedServices)
+            {
+                //Service__c service=new Service__c(name=serv.name,EOB__c=eob.id,No_of_Units__c=serv.No_of_Units__c);
+               
+            }*/
+            //system.debug('insertServices '+insertServices);
+            if(insertServices.size()>0)
+            {
+                insert insertServices;
+            }
+            PageReference pref = new PageReference('/'+eob.id);
+        pref.setRedirect(true);
+        return pref;
+            
+            
+        }
+        
+        public List<Service__c> processSelected(EOB__c eob) 
+    {
+        selectedServices = new List<Service__c>();
+        selectedServices.clear();
+        List<Service__c> insertServices=new List<Service__c>();
+        for(ServiceWrapper wrapServiceObj : serviceWrapperList) 
+        {
+            if(wrapServiceObj.selected == true) 
+            {
+                selectedServices.add(wrapServiceObj.service);
+                // Here you can add the counter or you check the selectedAccounts.size()
+                Service__c newService=new Service__c();
+               newService=wrapServiceObj.service.clone();
+               newService.eob__c=eob.id;
+                insertServices.add(newService);
+            }
+        }
+        return insertServices;
+    }
+        
+         // This is our wrapper/container class. 
+    public class ServiceWrapper 
+    {
+        public Service__c service {get; set;}
+        public Boolean selected {get; set;}
+        public ServiceWrapper(Service__c wrp) 
+        {
+            service = wrp;
+            selected = false;
+        }
+    }
+}

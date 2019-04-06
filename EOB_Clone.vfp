@@ -1,0 +1,68 @@
+<apex:page standardController="EOB__c" extensions="EOB_Clone_Controller">
+    
+    <script type="text/javascript">
+        function selectAllCheckboxes(obj,receivedInputID){
+            var inputCheckBox = document.getElementsByTagName("input");
+            for(var i=0; i<inputCheckBox.length; i++){
+                if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }
+    </script>
+    <br/><br/><br/><br/>
+    <apex:form >
+        <!--<apex:pageBlock mode="edit">
+             <apex:pageBlockSection title="EOB Details" columns="2" >-->
+        <div style="width:49%;display:inline-block;">
+        <b><apex:outputText value="EOB Name:"/></b>&nbsp;&nbsp;
+        <apex:inputText value="{!EOB__c.name}"/><br/>
+        </div>
+        
+        <div style="width:49%;display:inline-block;">
+        <b><apex:outputText value="Primary Payer Type:"/></b>&nbsp;&nbsp;
+        <apex:selectList value="{!selectedPrimaryPayer}" multiselect="false" id="items" size="1">
+        <apex:selectOptions value="{!regions}" />
+        </apex:selectList>
+    <br/>
+        </div>
+        <br/><br/>
+        <div style="width:49%;display:inline-block;">
+        <b><apex:outputText value="Provider Name:"/></b>&nbsp;&nbsp;
+        <apex:inputText value="{!EOB__c.Provider_Name__c}"/><br/>
+        </div>
+        
+        <br/><br/><br/>
+        <!--</apex:pageBlockSection>
+        </apex:pageBlock>-->
+        <center>
+        <apex:commandButton action="{!save}" value="Save"/>&nbsp;&nbsp;
+        <apex:commandButton action="{!cancel}" value="Cancel"/>
+        </center>
+        
+        <apex:pageBlock id="PB1">
+            <apex:pageblockSection title="List of Related Sevices to be Cloned" collapsible="false" columns="1">
+                <apex:dataTable value="{!serviceWrapperList}" var="ser" columnswidth="50px,50px" cellpadding="4" border="1">
+                    
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:inputCheckbox onclick="selectAllCheckboxes(this,'inputId')"/>
+                        </apex:facet>
+                        <apex:inputCheckbox value="{!ser.selected}" id="inputId"/>
+                    </apex:column>
+                    <apex:column headervalue="Service Name" value="{!ser.service.name}" />
+                    <apex:column headervalue="EOB" value="{!ser.service.EOB__c}" />
+                    
+                    <apex:column headervalue="No of Units" value="{!ser.service.No_of_Units__c}" />
+        
+                </apex:dataTable>
+             </apex:pageblockSection>
+        </apex:pageBlock>
+        
+    </apex:form>
+<!--<apex:relatedList list="services__r" />-->
+
+
+
+
+</apex:page>
